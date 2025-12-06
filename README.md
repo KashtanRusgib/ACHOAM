@@ -141,6 +141,50 @@ For example, when working with a local web server, you can use 'Restore Workspac
 
 To contribute to the project, start with our [Contributing Guide](CONTRIBUTING.md) to learn the basics. You can also join our [Discord](https://discord.gg/cline) to chat with other contributors in the `#contributors` channel. If you're looking for full-time work, check out our open positions on our [careers page](https://cline.bot/join-us)!
 
+## DEDICATION 
+
+<!--
+*****************************************************************************************************************************************************************************************************************************
+
+ ██████╗██╗  ██╗ ██████╗  █████╗ ███╗   ███╗
+██╔════╝██║  ██║██╔═══██╗██╔══██╗████╗ ████║
+██║     ███████║██║   ██║███████║██╔████╔██║
+██║     ██╔══██║██║   ██║██╔══██║██║╚██╔╝██║
+╚██████╗██║  ██║╚██████╔╝██║  ██║██║ ╚═╝ ██║
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝  
+
+by  
+
+ ██████╗  ██████╗ ██╗     ██████╗  ██████╗ ██╗   ██╗ █████╗ ██╗     
+██╔════╝ ██╔═══██╗██║     ██╔══██╗██╔═══██╗██║   ██║██╔══██╗██║     
+██║  ███╗██║   ██║██║     ██║  ██║██║   ██║██║   ██║███████║██║     
+██║   ██║██║   ██║██║     ██║  ██║██║   ██║╚██╗ ██╔╝██╔══██║██║     
+╚██████╔╝╚██████╔╝███████╗██████╔╝╚██████╔╝ ╚████╔╝ ██║  ██║███████╗
+ ╚═════╝  ╚═════╝ ╚══════╝╚═════╝  ╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚══════╝  
+
+THANK YOU to all the good people that made this project possible, it could not have happened without your support! 
+Hello & blessings to Henderson Roots! Hi Mom! Thanks for all the trips the Exploratorium, the Commodore 64,
+the skateboards, the real food, the rides to Radio Shack and the Coin Shop. Love at the Speed of Light!
+   By GOLDOVAL, this Token was built on a strict diet of eggs.
+Eggs & instant coffee to offset the AI subscriptions & the finest Appellation of Origin grown in the ground under the sun better than Organic small batch hand crafted Big Sur Holy Weed.
+California is The Golden State.      
+
+As all continues to go according to plan, like swiss clockwerk, like Lizzo, I will have a larger social media presence 2026 and onwards if work my axe oft. 
+Been reaching out to people to help orange pill Laurence Tureaud, a.k.a. Mr. T so when that happens maybe he'll repost a tweet for me, Captain Extra Cheugy.
+That said, at the beginning of the day, what is important is that while I'm launching my media empire I'll be like The A-Team: In 2021, a crack commando comedy unit was sent to deplatformed by a militaristic community 
+standards court for a crime they didn’t commit. This man promptly escaped from a maximum security YOUR ACCOUNT HAS BEEN SUSPENDED stockade to the Los Angeles underground. Today, still wanted by the World 
+Government (ahemstrawhat ahem), he survive as sheet of posterboard of itinerant fortune. If you have a problem, If no one else can help and if you can find him. Maybe you can hire, GOLDOVAL.
+WE ARE 8.2 BILLION cousins. SEE HUMAN FIRST. BE HUMAN FIRST.
+Made with love as a gift for EVERYONE, this CHOAM estension is designed to provide you an order of magnitude greater productivity, and, part of the dream is that you share the dream so I hope in some way this tools 
+allows it's users to spend more time with family and friends wihile getting more beter quality work done at work in less time. More Better. More Awesomer.
+It's the first week of December 2025 and the world is still here getting better every day !  
+Play awesome games with awesome people win awesome prizes ! 
+Here's yours !
+block 926625 =    000000000000000000011b2b773e73fda41e90dd954844365e595fcdb3b1a825  
+
+*************************************************************************************************************************************************************
+-->
+
 ## Enterprise
 
 Get the same Cline experience with enterprise-grade controls: SSO (SAML/OIDC), global policies and configuration, observability with audit trails, private networking (VPC/private link), and self-hosted or on-prem deployments, and enterprise support. Learn more at our [enterprise page](https://cline.bot/enterprise) or [talk to us](https://cline.bot/contact-sales).
