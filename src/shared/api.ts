@@ -222,6 +222,9 @@ export type ApiConfiguration = ApiHandlerOptions &
 	ApiHandlerSecrets & {
 		planModeApiProvider?: ApiProvider
 		actModeApiProvider?: ApiProvider
+		// Generic provider/model fields for individual bot configurations
+		apiProvider?: ApiProvider
+		apiModelId?: string
 	}
 
 /**
