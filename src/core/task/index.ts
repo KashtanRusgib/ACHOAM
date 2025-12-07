@@ -49,7 +49,8 @@ import { UrlContentFetcher } from "@services/browser/UrlContentFetcher"
 import { listFiles } from "@services/glob/list-files"
 import { Logger } from "@services/logging/Logger"
 import { McpHub } from "@services/mcp/McpHub"
-import { ApiConfiguration } from "@shared/api"
+import { ApiConfiguration, MultiBotConfiguration } from "@shared/api"
+import { normalizeApiConfigurations } from "@shared/apiConfigurationMigration"
 import { findLast, findLastIndex } from "@shared/array"
 import { combineApiRequests } from "@shared/combineApiRequests"
 import { combineCommandSequences } from "@shared/combineCommandSequences"
@@ -96,6 +97,8 @@ import {
 import { ShowMessageType } from "@/shared/proto/index.host"
 import { isClineCliInstalled, isCliSubagentContext } from "@/utils/cli-detector"
 import { isInTestMode } from "../../services/test/TestMode"
+import { Orchestrator } from "../achoam/Orchestrator"
+import { AchoamHead } from "../achoam/types"
 import { ensureLocalClineDirExists } from "../context/instructions/user-instructions/rule-helpers"
 import { refreshWorkflowToggles } from "../context/instructions/user-instructions/workflows"
 import { Controller } from "../controller"
@@ -206,6 +209,7 @@ export class Task {
 	contextManager: ContextManager
 	private diffViewProvider: DiffViewProvider
 	public checkpointManager?: ICheckpointManager
+	private orchestrator: Orchestrator
 	private clineIgnoreController: ClineIgnoreController
 	private toolExecutor: ToolExecutor
 	/**
@@ -487,6 +491,34 @@ export class Task {
 
 		// Now that ulid is initialized, we can build the API handler
 		this.api = buildApiHandler(effectiveApiConfiguration, mode)
+
+		// ACHOAM INIT - Initialize orchestrator with all configured bots from The Council
+		// Get stored API configurations (handles migration from legacy single-config)
+		const storedApiConfigurations = (this.stateManager as any).getApiConfigurations?.() as MultiBotConfiguration | undefined
+		const normalizedConfigs = normalizeApiConfigurations(apiConfiguration, storedApiConfigurations)
+
+		// Map bot configurations to AchoamHead objects
+		const achoamHeads: AchoamHead[] = normalizedConfigs.map((bot) => ({
+			id: bot.id,
+			name: bot.name || `Bot ${bot.id}`,
+			color: bot.color,
+			apiConfig: bot.config || ({} as any),
+		}))
+
+		// Initialize orchestrator with all heads (or single head in legacy mode)
+		// If empty, create a default head for backward compatibility
+		const headsToUse =
+			achoamHeads.length > 0
+				? achoamHeads
+				: [
+						{
+							id: "default-head",
+							name: "Main Agent",
+							color: "#FFFFFF",
+							apiConfig: apiConfiguration || ({} as any),
+						},
+					]
+		this.orchestrator = new Orchestrator(headsToUse)
 
 		// Set ulid on browserSession for telemetry tracking
 		this.browserSession.setUlid(this.ulid)
@@ -2801,6 +2833,14 @@ export class Task {
 			this.taskState.toolUseIdMap.clear()
 
 			const { toolUseHandler, reasonsHandler } = this.streamHandler.getHandlers()
+
+			// ACHOAM INTERCEPTION - Orchestrate API calls across all configured heads
+			// Get active head IDs from the orchestrator (all heads in The Council)
+			const activeHeadIds = this.orchestrator.getActiveHeadIds()
+			console.log("[ACHOAM] Broadcasting request to heads:", activeHeadIds)
+
+			// For MVP: trigger all heads, but stream only from the first (primary) head
+			// TODO: In full implementation, aggregate responses from multiple heads
 			const stream = this.attemptApiRequest(previousApiReqIndex) // yields only if the first chunk is successful, otherwise will allow the user to retry the request (most likely due to rate limit error, which gets thrown on the first chunk)
 
 			let assistantMessageId = ""

@@ -1,5 +1,5 @@
 import { AutoApprovalSettings } from "@shared/AutoApprovalSettings"
-import { ApiProvider, ModelInfo, type OcaModelInfo } from "@shared/api"
+import { ApiProvider, ModelInfo, MultiBotConfiguration, type OcaModelInfo } from "@shared/api"
 import { BrowserSettings } from "@shared/BrowserSettings"
 import { ClineRulesToggles } from "@shared/cline-rules"
 import { DictationSettings } from "@shared/DictationSettings"
@@ -57,6 +57,8 @@ export interface GlobalState {
 	remoteRulesToggles: ClineRulesToggles
 	remoteWorkflowToggles: ClineRulesToggles
 	dismissedBanners: Array<{ bannerId: string; dismissedAt: number }>
+	// Multi-bot configuration (The Council)
+	botConfigurations: MultiBotConfiguration | undefined
 }
 
 export interface Settings {

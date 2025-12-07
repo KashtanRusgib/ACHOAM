@@ -5,7 +5,7 @@ import { Mode } from "@shared/storage/types"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ModelsServiceClient } from "@/services/grpc-client"
 
-export const useApiConfigurationHandlers = () => {
+export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<ApiConfiguration>) => void) => {
 	const { apiConfiguration, planActSeparateModelsSetting } = useExtensionState()
 
 	/**
@@ -19,9 +19,20 @@ export const useApiConfigurationHandlers = () => {
 	 * @param value - The new value for the field
 	 */
 	const handleFieldChange = async <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => {
+		const updates = {
+			[field]: value,
+		}
+
+		// If onConfigChange callback is provided, use it (for multi-bot configuration)
+		if (onConfigChange) {
+			onConfigChange(updates as Partial<ApiConfiguration>)
+			return
+		}
+
+		// Otherwise, use the normal GRPC flow
 		const updatedConfig = {
 			...apiConfiguration,
-			[field]: value,
+			...updates,
 		}
 
 		const protoConfig = convertApiConfigurationToProto(updatedConfig)
@@ -42,6 +53,13 @@ export const useApiConfigurationHandlers = () => {
 	 * @param updates - An object containing the fields to update and their new values
 	 */
 	const handleFieldsChange = async (updates: Partial<ApiConfiguration>) => {
+		// If onConfigChange callback is provided, use it (for multi-bot configuration)
+		if (onConfigChange) {
+			onConfigChange(updates)
+			return
+		}
+
+		// Otherwise, use the normal GRPC flow
 		const updatedConfig = {
 			...apiConfiguration,
 			...updates,

@@ -212,3 +212,16 @@ Get the same CHOAM experience with enterprise-grade controls: SSO (SAML/OIDC), g
 ## License
 
 [Apache 2.0 © 2025 CHOAM Bot Inc.](./LICENSE)
+
+## Acknowledgements & Inspiration
+
+GOLDOVAL extends heartfelt gratitude to the Google Gemini team for providing the exceptional AI assistant that powered this entire development process. A special thanks to GitHub for their generous free tier in Codespaces, which provided the essential storage, compute, and version control infrastructure that enabled the use of Claude in GitHub Copilot.
+
+Yes, my friends, it is true—and I am happy living proof—that with these tools, you too can *just do things*! May we all endeavor to encode our love into the bare metal of the code we ship, in no uncertain terms, for we have all the tools available to us that we need to see humanity flourish.
+
+As Charlie Chaplin said in *The Great Dictator*:
+> "We all want to help one another. Human beings are like that. We want to live by each other's happiness - not by each other's misery. We don't want to hate and despise one another. In this world there is room for everyone. And the good earth is rich and can provide for everyone. The way of life can be free and beautiful... We have developed speed, but we have shut ourselves in. Machinery that gives abundance has left us in want. Our knowledge has made us cynical. Our cleverness, hard and unkind. We think too much and feel too little. More than machinery we need humanity. More than cleverness we need kindness and gentleness. Without these qualities, life will be violent and all will be lost… The aeroplane and the radio have brought us closer together. The very nature of these inventions cries out for the goodness in men - cries out for universal brotherhood - for the unity of us all."
+
+I believe Marc Andreessen's *Techno Optimist Manifesto* points us toward a Golden Age of Human Prosperity and Eudaimonia. It aligns with the "peace, love, granola" dreams of the past, the P.L.U.R. (Peace, Love, Unity, Respect) and Prosperity ethos of the SF Bay and global House Music community, the 10 Principles of Burning Man, and the simple truths we learned in Kindergarten. These are all updated remixes of the wisdom beautiful cultures have lived since time immemorial.
+
+May we meet upon the level of the DAO and part upon the squareness of the most recent Block Hash. So must it be. Give Thanks and Praises to The Source.

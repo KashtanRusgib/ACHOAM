@@ -60,6 +60,7 @@ interface ApiOptionsProps {
 	modelIdErrorMessage?: string
 	isPopup?: boolean
 	currentMode: Mode
+	onConfigChange?: (updates: Partial<import("@shared/api").ApiConfiguration>) => void
 }
 
 // This is necessary to ensure dropdown opens downward, important for when this is used in popup
@@ -86,13 +87,20 @@ declare module "vscode" {
 	}
 }
 
-const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, isPopup, currentMode }: ApiOptionsProps) => {
+const ApiOptions = ({
+	showModelOptions,
+	apiErrorMessage,
+	modelIdErrorMessage,
+	isPopup,
+	currentMode,
+	onConfigChange,
+}: ApiOptionsProps) => {
 	// Use full context state for immediate save payload
 	const { apiConfiguration, remoteConfigSettings } = useExtensionState()
 
 	const { selectedProvider } = normalizeApiConfiguration(apiConfiguration, currentMode)
 
-	const { handleModeFieldChange } = useApiConfigurationHandlers()
+	const { handleModeFieldChange } = useApiConfigurationHandlers(onConfigChange)
 
 	const [_ollamaModels, setOllamaModels] = useState<string[]>([])
 
