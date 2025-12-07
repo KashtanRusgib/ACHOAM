@@ -517,6 +517,7 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 		const remoteRulesToggles = context.globalState.get<GlobalStateAndSettings["remoteRulesToggles"]>("remoteRulesToggles")
 		const remoteWorkflowToggles =
 			context.globalState.get<GlobalStateAndSettings["remoteWorkflowToggles"]>("remoteWorkflowToggles")
+		const botConfigurations = context.globalState.get<GlobalStateAndSettings["botConfigurations"]>("botConfigurations")
 
 		return {
 			// api configuration fields
@@ -709,6 +710,7 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 			openTelemetryLogMaxQueueSize: openTelemetryLogMaxQueueSize ?? 2048,
 			remoteRulesToggles: remoteRulesToggles || {},
 			remoteWorkflowToggles: remoteWorkflowToggles || {},
+			botConfigurations,
 		}
 	} catch (error) {
 		console.error("[StateHelpers] Failed to read global state:", error)

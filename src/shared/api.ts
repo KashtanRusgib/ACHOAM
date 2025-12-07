@@ -222,7 +222,26 @@ export type ApiConfiguration = ApiHandlerOptions &
 	ApiHandlerSecrets & {
 		planModeApiProvider?: ApiProvider
 		actModeApiProvider?: ApiProvider
+		// Generic provider/model fields for individual bot configurations
+		apiProvider?: ApiProvider
+		apiModelId?: string
 	}
+
+/**
+ * Configuration for a single bot/agent in The Council
+ * Each bot has its own ApiConfiguration, unique id, and visual color
+ */
+export interface BotConfiguration {
+	id: string // Unique identifier for this bot (e.g., 'default-head', 'research-bot', 'code-bot')
+	name?: string // Display name for this bot
+	color: string // Hex color or CSS color for UI representation (e.g., '#FFFFFF', 'blue')
+	config: ApiConfiguration // The API configuration for this bot
+}
+
+/**
+ * Array of BotConfiguration objects representing The Council of multiple API providers
+ */
+export type MultiBotConfiguration = BotConfiguration[]
 
 // Models
 

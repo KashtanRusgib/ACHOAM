@@ -172,6 +172,14 @@ export class VscodeWebviewProvider extends WebviewProvider implements vscode.Web
 				}
 				break
 			}
+			case "updateBotConfigurations": {
+				if (message.botConfigurations) {
+					// Persist bot configurations to global state
+					this.controller.stateManager.setGlobalState("botConfigurations", message.botConfigurations)
+					console.log("Bot configurations saved to global state")
+				}
+				break
+			}
 			default: {
 				console.error("Received unhandled WebviewMessage type:", JSON.stringify(message))
 			}

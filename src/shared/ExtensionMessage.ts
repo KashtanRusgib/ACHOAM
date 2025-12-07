@@ -4,7 +4,7 @@ import { WorkspaceRoot } from "@shared/multi-root/types"
 import { RemoteConfigFields } from "@shared/storage/state-keys"
 import type { Environment } from "../config"
 import { AutoApprovalSettings } from "./AutoApprovalSettings"
-import { ApiConfiguration } from "./api"
+import { ApiConfiguration, MultiBotConfiguration } from "./api"
 import { BrowserSettings } from "./BrowserSettings"
 import { ClineFeatureSetting } from "./ClineFeatureSetting"
 import { ClineRulesToggles } from "./cline-rules"
@@ -41,7 +41,10 @@ export interface ExtensionState {
 	isNewUser: boolean
 	welcomeViewCompleted: boolean
 	onboardingModels: OnboardingModelGroup | undefined
+	// Deprecated: kept for backward compatibility only. Use apiConfigurations instead.
 	apiConfiguration?: ApiConfiguration
+	// NEW: Multiple bot configurations (The Council)
+	apiConfigurations?: MultiBotConfiguration
 	autoApprovalSettings: AutoApprovalSettings
 	browserSettings: BrowserSettings
 	remoteBrowserHost?: string

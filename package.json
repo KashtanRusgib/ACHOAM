@@ -3,7 +3,7 @@
 	"displayName": "Cline",
 	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
 	"version": "3.40.0",
-	"icon": "assets/icons/icon.png",
+	"icon": "assets/choam_logo_128x128px.png",
 	"engines": {
 		"vscode": "^1.84.0"
 	},
@@ -111,8 +111,8 @@
 			"activitybar": [
 				{
 					"id": "claude-dev-ActivityBar",
-					"title": "Cline",
-					"icon": "assets/icons/icon.svg"
+					"title": "CHOAM",
+					"icon": "assets/robot_icon_128x128px.png"
 				}
 			]
 		},
@@ -121,8 +121,8 @@
 				{
 					"type": "webview",
 					"id": "claude-dev.SidebarProvider",
-					"name": "",
-					"icon": "assets/icons/icon.svg"
+					"name": "CHOAM Control",
+					"icon": "assets/robot_icon_128x128px.png"
 				}
 			]
 		},
@@ -367,7 +367,7 @@
 		"clean:all": "npm run clean:build && npm run clean:deps",
 		"compile-tests": "node ./scripts/build-tests.js",
 		"watch-tests": "tsc -p . -w --outDir out",
-		"check-types": "npm run protos && npx tsc --noEmit && cd webview-ui && npx tsc -b --noEmit",
+		"check-types": "npm run protos && npx tsc --noEmit && cd webview-ui && npx tsc -b",
 		"lint": "biome lint --no-errors-on-unmatched --files-ignore-unknown=true --diagnostic-level=error && npm run lint:proto",
 		"lint:proto": "bash ./scripts/proto-lint.sh",
 		"format": "biome format --changed --no-errors-on-unmatched --files-ignore-unknown=true --diagnostic-level=error",

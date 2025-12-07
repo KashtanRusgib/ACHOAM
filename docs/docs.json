@@ -9,12 +9,12 @@
 		"dark": "#000000"
 	},
 	"logo": {
-		"light": "/assets/Cline_Logo-complete_black.png",
-		"dark": "/assets/Cline_Logo-complete_white.png"
+		"light": "/assets/choam_logo_128x128px.png",
+		"dark": "/assets/choam_logo_128x128px.png"
 	},
 	"favicon": {
-		"light": "/assets/robot_panel_light.png",
-		"dark": "/assets/robot_panel_dark.png"
+		"light": "/assets/robot_icon_128x128px.png",
+		"dark": "/assets/robot_icon_128x128px.png"
 	},
 	"background": {
 		"color": {
