@@ -858,6 +858,7 @@ export class Controller {
 		// Get API configuration from cache for immediate access
 		const onboardingModels = getClineOnboardingModels()
 		const apiConfiguration = this.stateManager.getApiConfiguration()
+		const apiConfigurations = this.stateManager.getGlobalStateKey("botConfigurations") // Load bot configurations from global state
 		const lastShownAnnouncementId = this.stateManager.getGlobalStateKey("lastShownAnnouncementId")
 		const taskHistory = this.stateManager.getGlobalStateKey("taskHistory")
 		const autoApprovalSettings = this.stateManager.getGlobalSettingsKey("autoApprovalSettings")
@@ -931,6 +932,7 @@ export class Controller {
 		return {
 			version,
 			apiConfiguration,
+			apiConfigurations, // Include bot configurations in the state
 			currentTaskItem,
 			clineMessages,
 			currentFocusChainChecklist: this.task?.taskState.currentFocusChainChecklist || null,

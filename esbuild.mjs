@@ -85,6 +85,37 @@ const esbuildProblemMatcherPlugin = {
 	},
 }
 
+const copyAssets = {
+	name: "copy-assets",
+	setup(build) {
+		build.onEnd(() => {
+			const sourceDir = path.join(__dirname, "assets")
+			const targetDir = path.join(__dirname, destDir, "assets")
+
+			// Create target assets directory if it doesn't exist
+			if (!fs.existsSync(targetDir)) {
+				fs.mkdirSync(targetDir, { recursive: true })
+			}
+
+			// Copy all files from assets to dist/assets
+			if (fs.existsSync(sourceDir)) {
+				const files = fs.readdirSync(sourceDir)
+				files.forEach((file) => {
+					const source = path.join(sourceDir, file)
+					const target = path.join(targetDir, file)
+					const stat = fs.statSync(source)
+					if (stat.isFile()) {
+						fs.copyFileSync(source, target)
+					} else if (stat.isDirectory()) {
+						// Recursively copy directories
+						fs.cpSync(source, target, { recursive: true })
+					}
+				})
+			}
+		})
+	},
+}
+
 const copyWasmFiles = {
 	name: "copy-wasm-files",
 	setup(build) {
@@ -180,6 +211,7 @@ const baseConfig = {
 	define: buildEnvVars,
 	tsconfig: path.resolve(__dirname, "tsconfig.json"),
 	plugins: [
+		copyAssets,
 		copyWasmFiles,
 		aliasResolverPlugin,
 		/* add to the end of plugins array */
