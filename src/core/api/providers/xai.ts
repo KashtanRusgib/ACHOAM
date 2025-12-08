@@ -19,27 +19,81 @@ interface XAIHandlerOptions extends CommonApiHandlerOptions {
 
 /**
  * Sanitize text to remove characters that can't be converted to ByteString by xAI API.
- * Characters with values > 255 that aren't properly handled need to be replaced.
+ * Characters with values > 255 that aren't properly handled need to be replaced or removed.
+ * This is a comprehensive fix that handles ALL non-ASCII characters that could cause issues.
  */
 function sanitizeForXAI(text: string): string {
-	// Replace problematic Unicode characters that cause ByteString conversion errors
-	// Common culprits: arrows (➜ U+279C), special symbols, etc.
-	return text.replace(/[\u2700-\u27BF\u2B00-\u2BFF\uE000-\uF8FF]/g, (char) => {
-		// Replace with ASCII equivalent or remove
-		const replacements: Record<string, string> = {
-			"➜": "->",
-			"→": "->",
-			"←": "<-",
-			"↑": "^",
-			"↓": "v",
-			"✓": "[x]",
-			"✗": "[ ]",
-			"•": "*",
-			"●": "*",
-			"○": "o",
-		}
-		return replacements[char] || ""
-	})
+	if (!text) {
+		return text
+	}
+
+	// First pass: replace known problematic characters with ASCII equivalents
+	const knownReplacements: [string, string][] = [
+		["➜", "->"],
+		["→", "->"],
+		["←", "<-"],
+		["↑", "^"],
+		["↓", "v"],
+		["✓", "[x]"],
+		["✔", "[x]"],
+		["✗", "[ ]"],
+		["✘", "[ ]"],
+		["•", "*"],
+		["●", "*"],
+		["○", "o"],
+		["◆", "*"],
+		["◇", "*"],
+		["■", "#"],
+		["□", "[ ]"],
+		["▪", "*"],
+		["▫", "*"],
+		["★", "*"],
+		["☆", "*"],
+		["♠", "spade"],
+		["♣", "club"],
+		["♥", "heart"],
+		["♦", "diamond"],
+		["—", "-"],
+		["–", "-"],
+		["\u2018", "'"], // left single quote
+		["\u2019", "'"], // right single quote
+		["\u201C", '"'], // left double quote
+		["\u201D", '"'], // right double quote
+		["…", "..."],
+		["€", "EUR"],
+		["£", "GBP"],
+		["¥", "JPY"],
+		["©", "(c)"],
+		["®", "(R)"],
+		["™", "(TM)"],
+		["°", " degrees"],
+		["±", "+/-"],
+		["×", "x"],
+		["÷", "/"],
+		["≠", "!="],
+		["≤", "<="],
+		["≥", ">="],
+		["∞", "infinity"],
+		["µ", "u"],
+		["α", "alpha"],
+		["β", "beta"],
+		["γ", "gamma"],
+		["δ", "delta"],
+		["π", "pi"],
+		["σ", "sigma"],
+		["Ω", "omega"],
+	]
+
+	let result = text
+	for (const [char, replacement] of knownReplacements) {
+		result = result.split(char).join(replacement)
+	}
+
+	// Second pass: remove any remaining characters > 255 that could cause ByteString errors
+	// Keep basic ASCII (0-127) and extended ASCII (128-255) that are safe
+	result = result.replace(/[^\x00-\xFF]/g, "")
+
+	return result
 }
 
 export class XAIHandler implements ApiHandler {

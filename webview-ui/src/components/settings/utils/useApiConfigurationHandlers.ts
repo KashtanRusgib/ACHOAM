@@ -5,8 +5,14 @@ import { Mode } from "@shared/storage/types"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ModelsServiceClient } from "@/services/grpc-client"
 
-export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<ApiConfiguration>) => void) => {
+export const useApiConfigurationHandlers = (
+	onConfigChange?: (updates: Partial<ApiConfiguration>) => void,
+	botConfig?: ApiConfiguration,
+) => {
 	const { apiConfiguration, planActSeparateModelsSetting } = useExtensionState()
+
+	// Use botConfig if provided (multi-bot mode), otherwise use global apiConfiguration
+	const effectiveConfig = botConfig ?? apiConfiguration
 
 	/**
 	 * Updates a single field in the API configuration.
@@ -31,7 +37,7 @@ export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<A
 
 		// Otherwise, use the normal GRPC flow
 		const updatedConfig = {
-			...apiConfiguration,
+			...effectiveConfig,
 			...updates,
 		}
 
@@ -61,7 +67,7 @@ export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<A
 
 		// Otherwise, use the normal GRPC flow
 		const updatedConfig = {
-			...apiConfiguration,
+			...effectiveConfig,
 			...updates,
 		}
 
@@ -78,6 +84,22 @@ export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<A
 		value: ApiConfiguration[PlanK] & ApiConfiguration[ActK], // Intersection ensures value is compatible with both field types
 		currentMode: Mode,
 	) => {
+		// In multi-bot mode (onConfigChange provided), always update both modes to keep bot config consistent
+		// This ensures each bot has its own independent configuration
+		if (onConfigChange) {
+			const updates: Partial<ApiConfiguration> = {
+				[fieldPair.plan]: value,
+				[fieldPair.act]: value,
+			}
+			// Also update base apiProvider field if we're changing provider
+			if (fieldPair.plan === "planModeApiProvider" || fieldPair.act === "actModeApiProvider") {
+				updates.apiProvider = value as any
+			}
+			await handleFieldsChange(updates)
+			return
+		}
+
+		// For global config, respect the planActSeparateModelsSetting
 		if (planActSeparateModelsSetting) {
 			const targetField = fieldPair[currentMode]
 			await handleFieldChange(targetField, value)
@@ -104,6 +126,19 @@ export const useApiConfigurationHandlers = (onConfigChange?: (updates: Partial<A
 		values: T,
 		currentMode: Mode,
 	) => {
+		// In multi-bot mode (onConfigChange provided), always update both modes to keep bot config consistent
+		// This ensures each bot has its own independent configuration
+		if (onConfigChange) {
+			const updates: Partial<ApiConfiguration> = {}
+			Object.entries(fieldPairs).forEach(([key, { plan, act }]) => {
+				updates[plan] = values[key]
+				updates[act] = values[key]
+			})
+			await handleFieldsChange(updates)
+			return
+		}
+
+		// For global config, respect the planActSeparateModelsSetting
 		if (planActSeparateModelsSetting) {
 			// Update only the current mode's fields
 			const updates: Partial<ApiConfiguration> = {}

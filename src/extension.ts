@@ -60,6 +60,12 @@ https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/framewo
 export async function activate(context: vscode.ExtensionContext) {
 	setupHostProvider(context)
 
+	// Ensure planActSeparateModelsSetting defaults to true for independent bot configs
+	const currentSetting = context.globalState.get("planActSeparateModelsSetting")
+	if (currentSetting === undefined) {
+		await context.globalState.update("planActSeparateModelsSetting", true)
+	}
+
 	// Initialize hook discovery cache for performance optimization
 	HookDiscoveryCache.getInstance().initialize(
 		context as any, // Adapt VSCode ExtensionContext to generic interface

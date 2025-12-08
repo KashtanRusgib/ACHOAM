@@ -170,6 +170,7 @@ const BotCard = ({ bot, currentMode, isLast, onNameChange, onColorChange, onDele
 
 			<ConfigContainer>
 				<ApiOptions
+					botConfig={bot.config}
 					currentMode={currentMode}
 					onConfigChange={onConfigChange}
 					// Pass a wrapper callback that routes config changes to our handler

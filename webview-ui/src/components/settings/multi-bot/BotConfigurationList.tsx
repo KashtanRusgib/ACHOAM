@@ -73,7 +73,10 @@ const BotConfigurationList = ({ configurations, currentMode, onConfigurationsCha
 			name: `Bot ${newBotIndex + 1}`,
 			color: getBotColor(newBotIndex),
 			config: {
+				// Set OpenRouter as default for all new bots
 				apiProvider: "openrouter",
+				planModeApiProvider: "openrouter",
+				actModeApiProvider: "openrouter",
 				openRouterApiKey: "",
 				openRouterModelId: "",
 			} as ApiConfiguration,

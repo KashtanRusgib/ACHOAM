@@ -61,6 +61,7 @@ interface ApiOptionsProps {
 	isPopup?: boolean
 	currentMode: Mode
 	onConfigChange?: (updates: Partial<import("@shared/api").ApiConfiguration>) => void
+	botConfig?: import("@shared/api").ApiConfiguration // Bot-specific config for multi-bot mode
 }
 
 // This is necessary to ensure dropdown opens downward, important for when this is used in popup
@@ -94,13 +95,17 @@ const ApiOptions = ({
 	isPopup,
 	currentMode,
 	onConfigChange,
+	botConfig,
 }: ApiOptionsProps) => {
 	// Use full context state for immediate save payload
 	const { apiConfiguration, remoteConfigSettings } = useExtensionState()
 
-	const { selectedProvider } = normalizeApiConfiguration(apiConfiguration, currentMode)
+	// Use botConfig if provided (multi-bot mode), otherwise use global apiConfiguration
+	const effectiveConfig = botConfig ?? apiConfiguration
 
-	const { handleModeFieldChange } = useApiConfigurationHandlers(onConfigChange)
+	const { selectedProvider } = normalizeApiConfiguration(effectiveConfig, currentMode)
+
+	const { handleModeFieldChange } = useApiConfigurationHandlers(onConfigChange, botConfig)
 
 	const [_ollamaModels, setOllamaModels] = useState<string[]>([])
 
@@ -133,6 +138,7 @@ const ApiOptions = ({
 	const [searchTerm, setSearchTerm] = useState("")
 	const [isDropdownVisible, setIsDropdownVisible] = useState(false)
 	const [selectedIndex, setSelectedIndex] = useState(-1)
+	const [pendingProviderChange, setPendingProviderChange] = useState(false) // Prevents useEffect from overriding during provider change
 	const dropdownRef = useRef<HTMLDivElement>(null)
 	const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 	const dropdownListRef = useRef<HTMLDivElement>(null)
@@ -158,11 +164,19 @@ const ApiOptions = ({
 	}, [providerOptions, selectedProvider])
 
 	// Sync search term with current provider when not searching
+	// Skip sync if there's a pending provider change to prevent flash-revert
 	useEffect(() => {
-		if (!isDropdownVisible) {
+		if (!isDropdownVisible && !pendingProviderChange) {
 			setSearchTerm(currentProviderLabel)
 		}
-	}, [currentProviderLabel, isDropdownVisible])
+	}, [currentProviderLabel, isDropdownVisible, pendingProviderChange])
+
+	// Reset pending flag when provider actually updates
+	useEffect(() => {
+		if (pendingProviderChange) {
+			setPendingProviderChange(false)
+		}
+	}, [selectedProvider])
 
 	const searchableItems = useMemo(() => {
 		return providerOptions.map((option) => ({
@@ -188,6 +202,14 @@ const ApiOptions = ({
 	}, [searchableItems, searchTerm, fuse, currentProviderLabel])
 
 	const handleProviderChange = (newProvider: string) => {
+		// Set pending flag to prevent useEffect from reverting the searchTerm
+		setPendingProviderChange(true)
+
+		// Immediately update the search term to show the new provider label
+		const newProviderLabel = providerOptions.find((option) => option.value === newProvider)?.label || newProvider
+		setSearchTerm(newProviderLabel)
+
+		// Update the configuration
 		handleModeFieldChange({ plan: "planModeApiProvider", act: "actModeApiProvider" }, newProvider as any, currentMode)
 		setIsDropdownVisible(false)
 		setSelectedIndex(-1)

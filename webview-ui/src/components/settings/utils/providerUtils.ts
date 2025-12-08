@@ -85,8 +85,11 @@ export function normalizeApiConfiguration(
 	currentMode: Mode,
 	liteLlmModels?: Record<string, ModelInfo>,
 ): NormalizedApiConfig {
+	// Check mode-specific provider first, then fall back to base apiProvider, then to default
 	const provider =
-		(currentMode === "plan" ? apiConfiguration?.planModeApiProvider : apiConfiguration?.actModeApiProvider) || "anthropic"
+		(currentMode === "plan" ? apiConfiguration?.planModeApiProvider : apiConfiguration?.actModeApiProvider) ||
+		apiConfiguration?.apiProvider ||
+		"openrouter"
 
 	const modelId = currentMode === "plan" ? apiConfiguration?.planModeApiModelId : apiConfiguration?.actModeApiModelId
 
