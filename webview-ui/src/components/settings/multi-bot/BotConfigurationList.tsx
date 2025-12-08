@@ -72,7 +72,11 @@ const BotConfigurationList = ({ configurations, currentMode, onConfigurationsCha
 			id: `bot-${Date.now()}`,
 			name: `Bot ${newBotIndex + 1}`,
 			color: getBotColor(newBotIndex),
-			config: {} as ApiConfiguration,
+			config: {
+				apiProvider: "openrouter",
+				openRouterApiKey: "",
+				openRouterModelId: "",
+			} as ApiConfiguration,
 		}
 		onConfigurationsChange([...configurations, newBot])
 	}
@@ -128,7 +132,7 @@ const BotConfigurationList = ({ configurations, currentMode, onConfigurationsCha
 	return (
 		<Container>
 			<BotsList>
-				{configurations.map((bot, index) => (
+				{configurations.map((bot) => (
 					<BotCard
 						bot={bot}
 						currentMode={currentMode}

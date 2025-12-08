@@ -17,6 +17,31 @@ interface XAIHandlerOptions extends CommonApiHandlerOptions {
 	apiModelId?: string
 }
 
+/**
+ * Sanitize text to remove characters that can't be converted to ByteString by xAI API.
+ * Characters with values > 255 that aren't properly handled need to be replaced.
+ */
+function sanitizeForXAI(text: string): string {
+	// Replace problematic Unicode characters that cause ByteString conversion errors
+	// Common culprits: arrows (➜ U+279C), special symbols, etc.
+	return text.replace(/[\u2700-\u27BF\u2B00-\u2BFF\uE000-\uF8FF]/g, (char) => {
+		// Replace with ASCII equivalent or remove
+		const replacements: Record<string, string> = {
+			"➜": "->",
+			"→": "->",
+			"←": "<-",
+			"↑": "^",
+			"↓": "v",
+			"✓": "[x]",
+			"✗": "[ ]",
+			"•": "*",
+			"●": "*",
+			"○": "o",
+		}
+		return replacements[char] || ""
+	})
+}
+
 export class XAIHandler implements ApiHandler {
 	private options: XAIHandlerOptions
 	private client: OpenAI | undefined
@@ -55,11 +80,33 @@ export class XAIHandler implements ApiHandler {
 				reasoningEffort = undefined
 			}
 		}
+
+		// Sanitize system prompt to avoid ByteString conversion errors with special Unicode characters
+		const sanitizedSystemPrompt = sanitizeForXAI(systemPrompt)
+
+		// Convert and sanitize messages
+		const openAiMessages = convertToOpenAiMessages(messages).map((msg) => {
+			if (typeof msg.content === "string") {
+				return { ...msg, content: sanitizeForXAI(msg.content) }
+			} else if (Array.isArray(msg.content)) {
+				return {
+					...msg,
+					content: msg.content.map((part: any) => {
+						if (part.type === "text" && typeof part.text === "string") {
+							return { ...part, text: sanitizeForXAI(part.text) }
+						}
+						return part
+					}),
+				}
+			}
+			return msg
+		})
+
 		const stream = await client.chat.completions.create({
 			model: modelId,
 			max_completion_tokens: this.getModel().info.maxTokens,
 			temperature: 0,
-			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
+			messages: [{ role: "system", content: sanitizedSystemPrompt }, ...openAiMessages] as any,
 			stream: true,
 			stream_options: { include_usage: true },
 			reasoning_effort: reasoningEffort,

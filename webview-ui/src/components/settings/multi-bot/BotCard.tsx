@@ -122,15 +122,18 @@ const BotCard = ({ bot, currentMode, isLast, onNameChange, onColorChange, onDele
 	}
 
 	// Extract provider and model info for display based on current mode
+	// Use generic apiProvider first, fall back to mode-specific providers
 	const provider =
-		currentMode === "plan"
-			? bot.config?.planModeApiProvider || "Not configured"
-			: bot.config?.actModeApiProvider || "Not configured"
+		bot.config?.apiProvider ||
+		(currentMode === "plan" ? bot.config?.planModeApiProvider : bot.config?.actModeApiProvider) ||
+		"Not configured"
 
+	// Use generic apiModelId first, fall back to mode-specific or common model IDs
 	const modelId =
-		currentMode === "plan"
-			? bot.config?.planModeApiModelId || "No model selected"
-			: bot.config?.actModeApiModelId || "No model selected"
+		bot.config?.apiModelId ||
+		(currentMode === "plan" ? bot.config?.planModeApiModelId : bot.config?.actModeApiModelId) ||
+		bot.config?.hicapModelId ||
+		"No model selected"
 
 	return (
 		<CardContainer $botColor={bot.color}>

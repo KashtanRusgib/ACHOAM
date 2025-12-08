@@ -1,22 +1,28 @@
 /**
- * Pleasant VS Code-friendly color palette for Multi-Bot Council visual identity
+ * Official 9-Bot Color Palette for CHOAM Multi-Bot Council
  * Colors are designed to be visually distinct and pleasant in both light and dark themes
  */
-export const BOT_COLOR_PALETTE = [
-	"#58A6FF", // Soft Blue - "Most Pleasant"
-	"#3FB950", // Soft Green
-	"#D29922", // Soft Orange
-	"#A371F7", // Soft Purple
-	"#F0883E", // Darker Orange/Red
-	"#2EA043", // Forest Green
+export const BOT_COLORS = [
+	"#8ABEB7", // 1 – Soft Teal
+	"#A2C880", // 2 – Muted Green
+	"#C397D8", // 3 – Soft Lavender
+	"#FFD780", // 4 – Warm Gold
+	"#FFC880", // 5 – Soft Orange
+	"#EC8B8B", // 6 – Muted Rose
+	"#80A0C8", // 7 – Soft Blue
+	"#5E9C91", // 8 – Deep Teal
+	"#F8F2A8", // 9 – Pastel Yellow
 ] as const
+
+// Legacy alias for backward compatibility
+export const BOT_COLOR_PALETTE = BOT_COLORS
 
 /**
  * Get a color from the palette by index
  * Automatically cycles through colors if index exceeds palette length
  */
 export function getBotColor(index: number): string {
-	return BOT_COLOR_PALETTE[index % BOT_COLOR_PALETTE.length]
+	return BOT_COLORS[index % BOT_COLORS.length]
 }
 
 /**

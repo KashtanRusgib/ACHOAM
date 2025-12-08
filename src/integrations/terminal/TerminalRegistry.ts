@@ -24,7 +24,7 @@ export class TerminalRegistry {
 		const terminalOptions: vscode.TerminalOptions = {
 			cwd,
 			name: "Cline",
-			iconPath: new vscode.ThemeIcon("cline-icon"),
+			iconPath: new vscode.ThemeIcon("choam-icon"),
 			env: {
 				CLINE_ACTIVE: "true",
 			},

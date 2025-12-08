@@ -67,7 +67,8 @@ old_docs/**
 # Include icons
 !assets/icons/**
 !assets/choam_logo_128x128px.png
-!assets/robot_icon_128x128px.png
+!assets/choam_logo.svg
+!assets/choam_logo.png
 
 # Ignore E2E build files
 e2e-build.mjs

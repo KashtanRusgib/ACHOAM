@@ -46,15 +46,6 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"icons": {
-			"cline-icon": {
-				"description": "cline",
-				"default": {
-					"fontPath": "assets/icons/cline-bot.woff",
-					"fontCharacter": "\\e900"
-				}
-			}
-		},
 		"walkthroughs": [
 			{
 				"id": "ClineWalkthrough",
@@ -112,7 +103,7 @@
 				{
 					"id": "claude-dev-ActivityBar",
 					"title": "CHOAM",
-					"icon": "assets/robot_icon_128x128px.png"
+					"icon": "assets/icons/choam-activity-bar.svg"
 				}
 			]
 		},
@@ -122,7 +113,7 @@
 					"type": "webview",
 					"id": "claude-dev.SidebarProvider",
 					"name": "CHOAM Control",
-					"icon": "assets/robot_icon_128x128px.png"
+					"icon": "assets/icons/choam-activity-bar.svg"
 				}
 			]
 		},
@@ -183,7 +174,7 @@
 				"command": "cline.generateGitCommitMessage",
 				"title": "Generate Commit Message with Cline",
 				"category": "Cline",
-				"icon": "$(cline-icon)"
+				"icon": "$(sparkle)"
 			},
 			{
 				"command": "cline.abortGitCommitMessage",

@@ -111,7 +111,18 @@ export async function getCwd(defaultCwd = ""): Promise<string> {
 }
 
 export function getDesktopDir() {
-	const desktopResult = workspaceResolver.resolveWorkspacePath(os.homedir(), "Desktop", "Utils.path.getDesktopDir")
+	// In Codespaces or containerized environments, Desktop may not exist
+	// Fall back to home directory or a workspace path
+	const homedir = os.homedir()
+
+	// Check if we're in a Codespaces/container environment where Desktop doesn't exist
+	// In these cases, use the CODESPACES workspace or home directory as fallback
+	if (process.env.CODESPACES === "true" || process.env.REMOTE_CONTAINERS === "true") {
+		// Use /workspaces as the default root in Codespaces
+		return process.env.GITHUB_WORKSPACE || "/workspaces"
+	}
+
+	const desktopResult = workspaceResolver.resolveWorkspacePath(homedir, "Desktop", "Utils.path.getDesktopDir")
 	return typeof desktopResult === "string" ? desktopResult : desktopResult.absolutePath
 }
 

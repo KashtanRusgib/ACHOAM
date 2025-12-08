@@ -129,6 +129,8 @@ export const ExtensionStateContextProvider: React.FC<{
 	const [showAccount, setShowAccount] = useState(false)
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [showChatModelSelector, setShowChatModelSelector] = useState(false)
+	const [showWelcome, setShowWelcome] = useState(false)
+	const [onboardingModels, setOnboardingModels] = useState<OnboardingModelGroup | undefined>(undefined)
 
 	// Helper for MCP view
 	const closeMcpView = useCallback(() => {
@@ -149,6 +151,7 @@ export const ExtensionStateContextProvider: React.FC<{
 	// Navigation functions
 	const navigateToMcp = useCallback(
 		(tab?: McpViewTab) => {
+			setShowWelcome(false) // Close welcome view if open
 			setShowSettings(false)
 			setShowHistory(false)
 			setShowAccount(false)
@@ -157,40 +160,44 @@ export const ExtensionStateContextProvider: React.FC<{
 			}
 			setShowMcp(true)
 		},
-		[setShowMcp, setMcpTab, setShowSettings, setShowHistory, setShowAccount],
+		[setShowMcp, setMcpTab, setShowSettings, setShowHistory, setShowAccount, setShowWelcome],
 	)
 
 	const navigateToSettings = useCallback(
 		(targetSection?: string) => {
+			setShowWelcome(false) // Close welcome view if open
 			setShowHistory(false)
 			closeMcpView()
 			setShowAccount(false)
 			setSettingsTargetSection(targetSection)
 			setShowSettings(true)
 		},
-		[closeMcpView],
+		[closeMcpView, setShowWelcome],
 	)
 
 	const navigateToHistory = useCallback(() => {
+		setShowWelcome(false) // Close welcome view if open
 		setShowSettings(false)
 		closeMcpView()
 		setShowAccount(false)
 		setShowHistory(true)
-	}, [setShowSettings, closeMcpView, setShowAccount, setShowHistory])
+	}, [setShowSettings, closeMcpView, setShowAccount, setShowHistory, setShowWelcome])
 
 	const navigateToAccount = useCallback(() => {
+		setShowWelcome(false) // Close welcome view if open
 		setShowSettings(false)
 		closeMcpView()
 		setShowHistory(false)
 		setShowAccount(true)
-	}, [setShowSettings, closeMcpView, setShowHistory, setShowAccount])
+	}, [setShowSettings, closeMcpView, setShowHistory, setShowAccount, setShowWelcome])
 
 	const navigateToChat = useCallback(() => {
+		setShowWelcome(false) // Close welcome view if open
 		setShowSettings(false)
 		closeMcpView()
 		setShowHistory(false)
 		setShowAccount(false)
-	}, [setShowSettings, closeMcpView, setShowHistory, setShowAccount])
+	}, [setShowSettings, closeMcpView, setShowHistory, setShowAccount, setShowWelcome])
 
 	const [state, setState] = useState<ExtensionState>({
 		version: "",
@@ -253,9 +260,6 @@ export const ExtensionStateContextProvider: React.FC<{
 	})
 	const [expandTaskHeader, setExpandTaskHeader] = useState(true)
 	const [didHydrateState, setDidHydrateState] = useState(false)
-
-	const [showWelcome, setShowWelcome] = useState(false)
-	const [onboardingModels, setOnboardingModels] = useState<OnboardingModelGroup | undefined>(undefined)
 
 	const [openRouterModels, setOpenRouterModels] = useState<Record<string, ModelInfo>>({
 		[openRouterDefaultModelId]: openRouterDefaultModelInfo,
@@ -507,11 +511,18 @@ export const ExtensionStateContextProvider: React.FC<{
 		// Subscribe to OpenRouter models updates
 		openRouterModelsUnsubscribeRef.current = ModelsServiceClient.subscribeToOpenRouterModels(EmptyRequest.create({}), {
 			onResponse: (response: OpenRouterCompatibleModelInfo) => {
-				const models = fromProtobufModels(response.models)
-				setOpenRouterModels({
-					[openRouterDefaultModelId]: openRouterDefaultModelInfo, // in case the extension sent a model list without the default model
-					...models,
-				})
+				try {
+					const models = response?.models ? fromProtobufModels(response.models) : {}
+					setOpenRouterModels({
+						[openRouterDefaultModelId]: openRouterDefaultModelInfo, // in case the extension sent a model list without the default model
+						...models,
+					})
+				} catch (e) {
+					console.error("Model subscription load failed:", e)
+					setOpenRouterModels({
+						[openRouterDefaultModelId]: openRouterDefaultModelInfo,
+					})
+				}
 			},
 			onError: (error) => {
 				console.error("Error in OpenRouter models subscription:", error)
@@ -524,8 +535,13 @@ export const ExtensionStateContextProvider: React.FC<{
 		// Subscribe to LiteLLM models updates
 		liteLlmModelsUnsubscribeRef.current = ModelsServiceClient.subscribeToLiteLlmModels(EmptyRequest.create({}), {
 			onResponse: (response: OpenRouterCompatibleModelInfo) => {
-				const models = fromProtobufModels(response.models)
-				setLiteLlmModels(models)
+				try {
+					const models = response?.models ? fromProtobufModels(response.models) : {}
+					setLiteLlmModels(models)
+				} catch (e) {
+					console.error("LiteLLM model subscription load failed:", e)
+					setLiteLlmModels({})
+				}
 			},
 			onError: (error) => {
 				console.error("Error in LiteLLM models subscription:", error)
@@ -665,11 +681,18 @@ export const ExtensionStateContextProvider: React.FC<{
 	const refreshOpenRouterModels = useCallback(() => {
 		ModelsServiceClient.refreshOpenRouterModelsRpc(EmptyRequest.create({}))
 			.then((response: OpenRouterCompatibleModelInfo) => {
-				const models = fromProtobufModels(response.models)
-				setOpenRouterModels({
-					[openRouterDefaultModelId]: openRouterDefaultModelInfo, // in case the extension sent a model list without the default model
-					...models,
-				})
+				try {
+					const models = response?.models ? fromProtobufModels(response.models) : {}
+					setOpenRouterModels({
+						[openRouterDefaultModelId]: openRouterDefaultModelInfo, // in case the extension sent a model list without the default model
+						...models,
+					})
+				} catch (e) {
+					console.error("Model load failed:", e)
+					setOpenRouterModels({
+						[openRouterDefaultModelId]: openRouterDefaultModelInfo,
+					})
+				}
 			})
 			.catch((error: Error) => console.error("Failed to refresh OpenRouter models:", error))
 	}, [])
@@ -677,10 +700,15 @@ export const ExtensionStateContextProvider: React.FC<{
 	const refreshHicapModels = useCallback(() => {
 		ModelsServiceClient.refreshHicapModels(EmptyRequest.create({}))
 			.then((response: OpenRouterCompatibleModelInfo) => {
-				const models = response.models
-				setHicapModels({
-					...models,
-				})
+				try {
+					const models = response?.models ?? {}
+					setHicapModels({
+						...models,
+					})
+				} catch (e) {
+					console.error("Hicap model load failed:", e)
+					setHicapModels({})
+				}
 			})
 			.catch((error: Error) => console.error("Failed to refresh Hicap models:", error))
 	}, [])
@@ -688,8 +716,13 @@ export const ExtensionStateContextProvider: React.FC<{
 	const refreshLiteLlmModels = useCallback(() => {
 		ModelsServiceClient.refreshLiteLlmModelsRpc(EmptyRequest.create({}))
 			.then((response: OpenRouterCompatibleModelInfo) => {
-				const models = fromProtobufModels(response.models)
-				setLiteLlmModels(models)
+				try {
+					const models = response?.models ? fromProtobufModels(response.models) : {}
+					setLiteLlmModels(models)
+				} catch (e) {
+					console.error("LiteLLM model load failed:", e)
+					setLiteLlmModels({})
+				}
 			})
 			.catch((error: Error) => console.error("Failed to refresh LiteLLM models:", error))
 	}, [])

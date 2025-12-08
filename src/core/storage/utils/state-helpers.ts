@@ -479,14 +479,15 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 
 		const mcpResponsesCollapsed = mcpResponsesCollapsedRaw ?? false
 
-		// Plan/Act separate models setting is a boolean indicating whether the user wants to use different models for plan and act. Existing users expect this to be enabled, while we want new users to opt in to this being disabled by default.
+		// Plan/Act separate models setting is a boolean indicating whether the user wants to use different models for plan and act.
+		// Default to true so Plan and Act modes are independent by default (no "one bot controls all" behavior).
 		// On win11 state sometimes initializes as empty string instead of undefined
 		let planActSeparateModelsSetting: boolean | undefined
 		if (planActSeparateModelsSettingRaw === true || planActSeparateModelsSettingRaw === false) {
 			planActSeparateModelsSetting = planActSeparateModelsSettingRaw
 		} else {
-			// default to false
-			planActSeparateModelsSetting = false
+			// default to true - each mode gets independent provider/model selection
+			planActSeparateModelsSetting = true
 		}
 
 		// Read task history from disk
@@ -665,7 +666,7 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 			mcpDisplayMode: mcpDisplayMode ?? DEFAULT_MCP_DISPLAY_MODE,
 			mcpResponsesCollapsed: mcpResponsesCollapsed,
 			telemetrySetting: telemetrySetting || "unset",
-			planActSeparateModelsSetting: planActSeparateModelsSetting ?? false,
+			planActSeparateModelsSetting: planActSeparateModelsSetting ?? true,
 			enableCheckpointsSetting: enableCheckpointsSettingRaw ?? true,
 			shellIntegrationTimeout: shellIntegrationTimeout || 4000,
 			terminalReuseEnabled: terminalReuseEnabled ?? true,
