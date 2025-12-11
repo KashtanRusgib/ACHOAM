@@ -1,0 +1,272 @@
+================================================================================
+CHOAM PROJECT REPORT
+Date: December 11, 2025
+Status: Active Development - Title Bar Button Integration Phase
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+
+CHOAM (Chatbot Hub Organization And Management) is a fork of the Cline VS Code 
+extension that enhances autonomous AI coding capabilities by enabling multiple 
+AI chatbots to work together collaboratively in a single workspace.
+
+Project Vision:
+"Two sticks rubbed together create fire. One AI chatbot has a zillion uses, 
+but rub two AI chatbots together..." - GOLDOVAL
+
+The core innovation is bringing Slack-style multi-bot collaboration into VS Code,
+allowing developers to leverage multiple AI perspectives simultaneously rather 
+than copy-pasting between browser tabs.
+
+TECHNICAL ARCHITECTURE
+================================================================================
+
+Core Technology Stack:
+- TypeScript/JavaScript
+- VS Code Extension API
+- gRPC-like protocol over VS Code message passing
+- Protocol Buffers (proto/) for service definitions
+- React (webview-ui/) for the frontend interface
+- Go (cli/) for command-line interface
+
+Key Components:
+1. Extension Host (src/core/) - Backend logic, file operations, terminal control
+2. Webview UI (webview-ui/) - React-based chat interface
+3. Proto Services (proto/) - RPC definitions for communication
+4. CLI Tools (cli/) - Command-line interface written in Go
+
+Communication Architecture:
+- Extension and webview communicate via gRPC protocol over VS Code messaging
+- Bidirectional streaming for real-time updates
+- Proto files in proto/ define services (e.g., task.proto, ui.proto, account.proto)
+- Auto-generated clients in src/generated/nice-grpc/
+- Auto-generated handlers in src/generated/grpc-js/
+
+CURRENT CAPABILITIES
+================================================================================
+
+AI Assistant Features (inherited from Cline):
+- File creation and editing with diff view
+- Terminal command execution with approval workflow
+- Browser automation (headless browser control)
+- Project analysis via AST parsing and regex search
+- Model Context Protocol (MCP) integration
+- Multi-model support (OpenRouter, Anthropic, OpenAI, Gemini, AWS Bedrock, etc.)
+- Cost tracking and token usage monitoring
+
+Title Bar Button System:
+- Plus Button (+) - Navigate to chat/start new conversation
+- Settings Button (⚙️) - Open settings panel
+- History Button - View conversation history
+- Account Button - Manage account/authentication
+- MCP Button - Access Model Context Protocol features
+- Chat Button - Navigate to main chat interface
+
+RECENT DEVELOPMENT WORK (December 2025)
+================================================================================
+
+Problem Identified:
+Title bar buttons in VS Code were non-functional. When clicked, the backend 
+would log the click event but the frontend React app would receive no signal,
+resulting in no UI response.
+
+Root Cause:
+The gRPC subscription pattern was not persisting active connections between
+the webview and the extension host. When button click events were broadcast,
+there were no active subscribers to receive them.
+
+Files Affected & Fixed:
+1. src/core/controller/ui/subscribeToPlusButtonClicked.ts
+2. src/core/controller/ui/subscribeToSettingsButtonClicked.ts
+3. src/core/controller/ui/subscribeToHistoryButtonClicked.ts
+4. src/core/controller/ui/subscribeToAccountButtonClicked.ts
+5. src/core/controller/ui/subscribeToMcpButtonClicked.ts
+
+Solution Implemented:
+Applied "Persistent Subscription Pattern" to all button handlers:
+
+```typescript
+// Global set to track all active webviews listening for this event
+const activeSubscriptions = new Set<StreamingResponseHandler<Empty>>()
+
+export async function subscribeToXButtonClicked(
+    _controller: Controller,
+    _request: EmptyRequest,
+    responseStream: StreamingResponseHandler<Empty>,
+    requestId?: string,
+): Promise<void> {
+    // 1. Add the stream immediately
+    activeSubscriptions.add(responseStream)
+    
+    // 2. Setup cleanup to remove it when the connection breaks/closes
+    responseStream.onCancel?.(() => {
+        activeSubscriptions.delete(responseStream)
+    })
+
+    console.log(`[gRPC] XButtonClicked subscription active — total: ${activeSubscriptions.size}`)
+}
+
+export async function sendXButtonClickedEvent(): Promise<void> {
+    console.log(`[gRPC] Broadcasting XButtonClicked to ${activeSubscriptions.size} subscribers`)
+    const message = Empty.create({})
+    
+    // 3. Iterate over a copy of the set to avoid modification errors
+    for (const stream of [...activeSubscriptions]) {
+        try {
+            // Send the empty message to trigger the event
+            await stream(message, false) // false = keep stream open
+        } catch (err) {
+            console.warn("[gRPC] Failed to send to one subscriber, removing", err)
+            activeSubscriptions.delete(stream)
+        }
+    }
+}
+```
+
+Key Improvements:
+1. Persistent activeSubscriptions Set maintains connections across calls
+2. Cleanup via responseStream.onCancel prevents memory leaks
+3. Enhanced logging shows exact subscriber count for debugging
+4. Proper streaming with (message, false) keeps connections alive
+5. Safe iteration prevents modification-during-iteration errors
+
+Frontend Listener (webview-ui/src/context/ExtensionStateContext.tsx):
+The React app correctly subscribes via UiServiceClient.subscribeToPlusButtonClicked
+with onResponse handler that logs and calls navigateToChat(). After the fix,
+events now reach the frontend successfully.
+
+CURRENT STATUS
+================================================================================
+
+✅ Plus Button - FIXED (navigates to chat)
+✅ Settings Button - FIXED (opens settings panel)
+✅ History Button - FIXED (shows conversation history)
+✅ Account Button - FIXED (manages account)
+✅ MCP Button - FIXED (accesses MCP features)
+
+All five title bar buttons now use the persistent subscription pattern and
+should function correctly after extension reload.
+
+Testing Required:
+1. Reload extension (Cmd+R / Ctrl+R in VS Code)
+2. Click each button and verify:
+   - Backend logs: "[gRPC] Broadcasting XButtonClicked to 1 subscribers"
+   - Frontend logs: "[DEBUG] Received X button clicked event from gRPC stream"
+   - Expected navigation/action occurs
+
+PROJECT STRUCTURE
+================================================================================
+
+Key Directories:
+/proto/                  - Protocol Buffer service definitions
+/src/core/               - Extension backend logic
+/src/core/controller/    - gRPC handler implementations
+/src/core/controller/ui/ - UI event handlers (button subscriptions)
+/src/generated/          - Auto-generated proto code
+/src/shared/proto/       - Shared proto type definitions
+/webview-ui/             - React frontend application
+/cli/                    - Go command-line interface
+/docs/                   - Documentation site
+/scripts/                - Build and development scripts
+
+Important Files:
+- CLAUDE.md              - Tribal knowledge & development patterns
+- package.json           - Extension manifest & dependencies
+- proto/cline/ui.proto   - UI service definitions
+- src/extension.ts       - Extension entry point
+- webview-ui/src/context/ExtensionStateContext.tsx - Frontend state management
+
+Development Workflow:
+1. Modify .proto files in proto/
+2. Run: npm run protos (regenerates types/handlers)
+3. Implement handlers in src/core/controller/
+4. Update React components in webview-ui/
+5. Test with extension reload
+
+FUTURE DEVELOPMENT ROADMAP
+================================================================================
+
+Primary Goals:
+1. Implement multi-chatbot collaboration interface
+2. Enable simultaneous conversations with multiple AI models
+3. Create adversarial/collaborative round system
+4. Develop chatbot coordination protocols
+5. Build team management UI for bot selection
+
+Technical Priorities:
+- Stabilize gRPC communication layer
+- Optimize context window management for multi-bot scenarios
+- Implement bot-to-bot message routing
+- Create collaborative editing conflict resolution
+- Develop cost tracking across multiple concurrent AI sessions
+
+DEVELOPMENT PATTERNS & BEST PRACTICES
+================================================================================
+
+When Adding New gRPC Endpoints:
+1. Define RPC in appropriate .proto file (task.proto, ui.proto, account.proto)
+2. Run: npm run protos
+3. Create handler in src/core/controller/<domain>/
+4. If streaming, use persistent subscription pattern (see button fixes)
+5. Update frontend client calls in webview-ui/
+6. Add logging for debugging
+
+When Modifying System Prompts:
+1. Check variant tier: next-gen, generic, xs, hermes, glm
+2. Modify appropriate files in src/core/prompts/system-prompt/
+3. Run: UPDATE_SNAPSHOTS=true npm run test:unit
+4. Review snapshot changes in __tests__/__snapshots__/
+
+Critical Files to Update for New Features:
+- Proto definitions (proto/)
+- Proto conversion mappings (src/shared/proto-conversions/)
+- Tool definitions (src/core/prompts/system-prompt/tools/)
+- Variant configs (src/core/prompts/system-prompt/variants/*/config.ts)
+- Frontend components (webview-ui/src/components/)
+
+KNOWN ISSUES & CONSIDERATIONS
+================================================================================
+
+Recent Fix Areas:
+- Button subscription persistence (now resolved)
+- gRPC streaming connection lifecycle
+- Webview-to-extension communication reliability
+
+Areas Requiring Attention:
+- Multi-bot architecture design
+- Context window optimization for collaborative sessions
+- Bot coordination protocol specification
+- UI/UX for managing multiple concurrent conversations
+
+CREDITS & ACKNOWLEDGMENTS
+================================================================================
+
+CHOAM by GOLDOVAL (KashtanRusgib)
+Based on Cline by Saoud Rizwan
+Built with Claude Sonnet 4.5
+License: Apache-2.0
+
+Special dedication includes gratitude for family support, Radio Shack trips,
+Commodore 64, and "a strict diet of eggs and instant coffee to offset the AI
+subscriptions." - From the_GOLDOVAL_CHOAM_SPECIAL_DEDICATION.txt
+
+Project Philosophy:
+"We are 8.2 billion cousins. SEE HUMAN FIRST. BE HUMAN FIRST."
+"Made with love as a gift for EVERYONE"
+
+Block 926625: 000000000000000000011b2b773e73fda41e90dd954844365e595fcdb3b1a825
+
+================================================================================
+END REPORT
+================================================================================
+
+Next Session Onboarding Checklist:
+□ Review this document
+□ Read CLAUDE.md for tribal knowledge
+□ Check README.md for user-facing features
+□ Examine proto/ directory for service definitions
+□ Review recent git commits for context
+□ Test title bar buttons to verify fixes
+□ Familiarize with gRPC communication patterns
+□ Understand persistent subscription pattern

@@ -36,8 +36,8 @@ const ApiConfigurationSection = ({ renderSectionHeader }: ApiConfigurationSectio
 	}, [apiConfiguration, apiConfigurations, useBotCouncil])
 
 	const handleBotConfigurationsChange = async (updatedConfigs: any[]) => {
-		// Update local state immediately to trigger re-render
-		setLocalBotConfigs(updatedConfigs)
+		// Use functional update to avoid stale closure issues
+		setLocalBotConfigs(() => [...updatedConfigs])
 
 		// Persist to backend via vscode.postMessage
 		console.log("Updated bot configurations:", updatedConfigs)

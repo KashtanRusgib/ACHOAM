@@ -1,9 +1,13 @@
-import { ApiConfiguration, MultiBotConfiguration } from "@shared/api"
+import { ApiConfiguration, BotConfiguration, MultiBotConfiguration } from "@shared/api"
 import { Mode } from "@shared/storage/types"
 import { Plus } from "lucide-react"
+import { useEffect } from "react"
 import styled from "styled-components"
 import { getBotColor } from "@/utils/botColors"
 import BotCard from "./BotCard"
+
+// Get VS Code API once at module level
+const vscode = (window as any).acquireVsCodeApi ? (window as any).acquireVsCodeApi() : (window as any).vscode
 
 interface BotConfigurationListProps {
 	configurations: MultiBotConfiguration
@@ -67,22 +71,47 @@ const EmptyState = styled.div`
  */
 const BotConfigurationList = ({ configurations, currentMode, onConfigurationsChange }: BotConfigurationListProps) => {
 	const handleAddBot = () => {
-		const newBotIndex = configurations.length
-		const newBot = {
-			id: `bot-${Date.now()}`,
-			name: `Bot ${newBotIndex + 1}`,
-			color: getBotColor(newBotIndex),
+		const newBot: BotConfiguration = {
+			id: crypto.randomUUID(),
+			name: `Bot ${configurations.length + 1}`,
+			color: getBotColor(configurations.length),
 			config: {
-				// Set OpenRouter as default for all new bots
+				// 100% clean defaults - OpenRouter with all fields empty
 				apiProvider: "openrouter",
 				planModeApiProvider: "openrouter",
 				actModeApiProvider: "openrouter",
 				openRouterApiKey: "",
 				openRouterModelId: "",
+				planModeOpenRouterModelId: "",
+				actModeOpenRouterModelId: "",
+				hicapModelId: "",
+				planModeHicapModelId: "",
+				actModeHicapModelId: "",
+				anthropicApiKey: "",
+				googleApiKey: "",
 			} as ApiConfiguration,
 		}
-		onConfigurationsChange([...configurations, newBot])
+
+		const updated = [...configurations, newBot]
+		onConfigurationsChange(updated)
+
+		// Immediate persistence across webview destroy/recreate
+		if (vscode?.setState) {
+			vscode.setState({ botConfigurations: updated })
+		}
 	}
+
+	// Load persisted state on mount, create default bot if none exist
+	useEffect(() => {
+		if (vscode?.getState) {
+			const saved = vscode.getState()?.botConfigurations as BotConfiguration[] | undefined
+			if (saved && saved.length > 0) {
+				onConfigurationsChange(saved)
+			} else if (configurations.length === 0) {
+				handleAddBot()
+			}
+		}
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	const handleBotNameChange = (botId: string, newName: string) => {
 		const updatedConfigs = configurations.map((bot) => (bot.id === botId ? { ...bot, name: newName } : bot))

@@ -1,0 +1,128 @@
+import { PostHog } from "posthog-node";
+import * as vscode from "vscode";
+import { HostProvider } from "@/hosts/host-provider";
+import { getDistinctId } from "@/services/logging/distinctId";
+import { PostHogClientProvider } from "@/services/telemetry/providers/posthog/PostHogClientProvider";
+import { Setting } from "@/shared/proto/index.host";
+import * as pkg from "../../../../package.json";
+import { ClineError } from "../ClineError";
+const isDev = process.env.IS_DEV === "true";
+/**
+ * PostHog implementation of the error provider interface
+ * Handles PostHog-specific error tracking and logging
+ */
+export class PostHogErrorProvider {
+    client;
+    errorSettings;
+    // Does not accept shared client
+    isSharedClient = false;
+    constructor(clientConfig) {
+        // Use shared PostHog client if provided, otherwise create a new one
+        this.client = new PostHog(clientConfig.errorTrackingApiKey, {
+            host: clientConfig.host,
+            enableExceptionAutocapture: false, // NOTE: Re-enable it once the api key is set to env var
+            before_send: (event) => PostHogClientProvider.eventFilter(event),
+        });
+        // Initialize error settings
+        this.errorSettings = {
+            enabled: true,
+            hostEnabled: true,
+            level: "all",
+        };
+    }
+    async initialize() {
+        // Listen for host telemetry changes
+        HostProvider.env.subscribeToTelemetrySettings({}, {
+            onResponse: (event) => {
+                const hostEnabled = event.isEnabled === Setting.ENABLED || event.isEnabled === Setting.UNSUPPORTED;
+                this.errorSettings.hostEnabled = hostEnabled;
+            },
+        });
+        const hostSettings = await HostProvider.env.getTelemetrySettings({});
+        if (hostSettings.isEnabled === Setting.DISABLED) {
+            this.errorSettings.hostEnabled = false;
+        }
+        // Check extension-specific telemetry setting
+        const config = vscode.workspace.getConfiguration("cline");
+        if (config.get("telemetrySetting") === "disabled") {
+            this.errorSettings.enabled = false;
+        }
+        this.errorSettings.level = await this.getErrorLevel();
+        return this;
+    }
+    logException(error, properties = {}) {
+        if (!this.isEnabled() || this.errorSettings.level === "off") {
+            return;
+        }
+        const errorDetails = {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            extension_version: pkg.version,
+            is_dev: isDev,
+            ...properties,
+        };
+        if (error instanceof ClineError) {
+            Object.assign(errorDetails, {
+                modelId: error.modelId,
+                providerId: error.providerId,
+                serialized_error: error.serialize(),
+            });
+        }
+        this.client.capture({
+            distinctId: this.distinctId,
+            event: "extension.error",
+            properties: {
+                error_type: "exception",
+                ...errorDetails,
+                timestamp: new Date().toISOString(),
+            },
+        });
+        console.error("[PostHogErrorProvider] Logging exception", error);
+    }
+    logMessage(message, level = "log", properties = {}) {
+        if (!this.isEnabled() || this.errorSettings.level === "off") {
+            return;
+        }
+        // Filter messages based on error level
+        if (this.errorSettings.level === "error" && level !== "error") {
+            return;
+        }
+        this.client.capture({
+            distinctId: this.distinctId,
+            event: "extension.message",
+            properties: {
+                message: message.substring(0, 500), // Truncate long messages
+                level,
+                extension_version: pkg.version,
+                is_dev: isDev,
+                timestamp: new Date().toISOString(),
+                ...properties,
+            },
+        });
+    }
+    isEnabled() {
+        return this.errorSettings.enabled && this.errorSettings.hostEnabled;
+    }
+    getSettings() {
+        return { ...this.errorSettings };
+    }
+    async getErrorLevel() {
+        const hostSettings = await HostProvider.env.getTelemetrySettings({});
+        if (hostSettings.isEnabled === Setting.DISABLED) {
+            return "off";
+        }
+        const config = vscode.workspace.getConfiguration("telemetry");
+        return config?.get("telemetryLevel") || "all";
+    }
+    get distinctId() {
+        return getDistinctId();
+    }
+    async dispose() {
+        // Only shut down the client if it's not shared (we own it)
+        if (!this.isSharedClient) {
+            await this.client.shutdown().catch((error) => console.error("Error shutting down PostHog client:", error));
+        }
+    }
+}
+//# sourceMappingURL=PostHogErrorProvider.js.map
